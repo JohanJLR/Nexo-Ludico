@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Detalle Juego</title>
+
+<style>
+body {
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial;
+  background: #0f172a;
+  color: white;
+}
+
+/* 🎬 HERO */
+.hero {
+  height: 60vh;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed; /* 🔥 PARALLAX */
+  position: relative;
+  animation: zoomHero 8s ease-in-out infinite alternate;
+}
+
+@keyframes zoomHero {
+  from { transform: scale(1); }
+  to { transform: scale(1.05); }
+}
+
+/* 📦 CONTENIDO */
+.container {
+  padding: 30px;
+  margin-top: -100px;
+  text-align: center;
+  animation: slideUp 0.8s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 🖼️ POSTER */
+.poster {
+  width: 220px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+}
+
+/* 🎲 TITULO */
+h1 {
+  margin-top: 15px;
+  font-size: 2.5rem;
+}
+
+/* ⭐ RATING */
+.rating {
+  font-size: 22px;
+  color: gold;
+  animation: glow 1.5s infinite alternate;
+}
+
+@keyframes glow {
+  from { text-shadow: 0 0 5px gold; }
+  to { text-shadow: 0 0 15px gold; }
+}
+
+/* ℹ️ INFO */
+.info {
+  color: #cbd5e1;
+  margin: 5px 0;
+}
+
+/* 🔘 BOTONES */
+button {
+  padding: 12px 20px;
+  margin: 5px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+/* ❤️ Favorito */
+.btn-fav {
+  background: linear-gradient(135deg, #ff4081, #f50057);
+  color: white;
+}
+
+.btn-fav:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px #ff4081;
+}
+
+/* 🔙 Volver */
+.btn-back {
+  background: #334155;
+  color: white;
+}
+
+.btn-back:hover {
+  transform: scale(1.1);
+  background: #475569;
+}
+.poster {
+  width: 220px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+  transition: all 0.4s ease; /* 🔥 hace la animación suave */
+}
+
+.poster:hover {
+  transform: scale(1.08) rotate(1deg); /* 🔥 efecto */
+}
+</style>
+</head>
+<body>
+
+<div class="hero" id="hero">
+  <div class="overlay"></div>
+</div>
+
+<div class="container" id="detalle"></div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+// ⭐ estrellas
+function generarEstrellas(rating) {
+  const estrellas = Math.round(rating / 2); // escala 0-10 → 0-5
+  let html = "";
+
+  for (let i = 1; i <= 5; i++) {
+    html += i <= estrellas ? "⭐" : "☆";
+  }
+
+  return html;
+}
+
+async function cargarDetalle() {
+  document.getElementById("detalle").innerHTML = "🎬 Cargando...";
+  
+  const res = await fetch(`/api/juegos/${id}`);
+  const juego = await res.json();
+
+  const img = `https://source.unsplash.com/600x800/?boardgame,${juego.nombre}`;
+
+  // 🎬 fondo hero
+  document.getElementById("hero").style.backgroundImage = `url(${img})`;
+
+  const cont = document.getElementById("detalle");
+
+  cont.innerHTML = `
+    <img src="${img}" class="poster">
+
+    <h1>${juego.nombre}</h1>
+
+    <div class="rating">
+      ${generarEstrellas(juego.rating || 0)} (${juego.rating || 'N/A'})
+    </div>
+
+    <p class="info">📅 Año: ${juego.anio || 'N/A'}</p>
+    <p class="info">🏆 Rank: ${juego.rank || 'N/A'}</p>
+
+    <div class="buttons">
+      <button class="btn-fav" onclick="guardarFavorito('${juego._id}', '${juego.nombre}')">
+        ❤️ Guardar
+      </button>
+
+      <button class="btn-back" onclick="volver()">
+        🔙 Volver
+      </button>
+    </div>
+  `;
+}
+
+async function guardarFavorito(id, nombre) {
+  await fetch('/api/favoritos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ juegoId: id, nombre })
+  });
+
+  alert('❤️ Guardado en favoritos');
+}
+
+function volver() {
+  window.history.back();
+}
+
+cargarDetalle();
+</script>
+
+</body>
+</html>
